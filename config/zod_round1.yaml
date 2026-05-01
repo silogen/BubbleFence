@@ -1,0 +1,30 @@
+# ZOD Demo Round 1 -- initial two drives
+# Usage: from bubblefence import run_batch; run_batch("config/zod_round1.yaml")
+
+folders:
+  - zod_data/drives/000000/camera_front_blur
+  - zod_data/drives/000004/camera_front_blur
+
+output_dir: zod_notebook_exp
+bf_config: config/bubblefence_config.yaml
+
+visualizations:
+  - type: standalone
+    save: tsne_traj_circles_thumbs_s100.png
+    show_heatmap: false
+    show_points: true
+    show_trajectories: true
+    show_radius_circles: true
+    show_anchor_thumbnails: true
+    num_anchor_thumbnails: 7
+    smoothing: 100
+    reduction_method: TSNE
+    anchor_thumb_pixels: 120
+    point_alpha: 0.1
+
+  - type: stats
+
+  - type: summary
+    save: tsne_summary.png
+    show_heatmap: true
+    reduction_method: TSNE

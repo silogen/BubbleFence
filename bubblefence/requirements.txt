@@ -1,0 +1,31 @@
+# BubbleFence Dependencies
+#
+# CPU install (default):
+#   pip install -r requirements.txt
+#
+# ROCm GPU install:
+#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/rocm7.1
+
+# --- PyTorch (CPU by default; GPU picked up automatically via --extra-index-url) ---
+torch>=2.5
+torchvision>=0.20
+
+# --- Core ---
+numpy>=2.0
+pandas>=2.0
+scipy>=1.13
+scikit-learn>=1.6
+PyYAML>=6.0
+tqdm>=4.60
+Pillow>=11.0
+
+# --- Foundation models ---
+transformers==4.50.3
+huggingface-hub>=0.30
+safetensors>=0.5
+tokenizers>=0.21
+
+# --- Visualization ---
+matplotlib>=3.9
+seaborn>=0.13
+mplcursors>=0.6
