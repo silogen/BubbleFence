@@ -24,10 +24,7 @@ GPU (ROCm):
 pip install -r bubblefence/requirements.txt --index-url https://download.pytorch.org/whl/rocm7.1
 ```
 
-GPU (CUDA):
-```bash
-pip install -r bubblefence/requirements.txt --index-url https://download.pytorch.org/whl/cu124
-```
+Note: Other GPU backends (e.g. CUDA) may also work but have not been tested.
 
 ## Quick Start
 
@@ -288,4 +285,4 @@ output/
 ## Notebooks
 
 - **`BubbleFence_ZOD_Demo.ipynb`** -- step-by-step walkthrough of each pipeline stage (embedding, dedup, density analysis, anchor placement, assignment) with intermediate outputs. Good for understanding the internals.
-- **`BubbleFence_ZOD_Blog.ipynb`** -- concise end-to-end demo using `run_batch` with YAML configs. Runs two rounds of incremental ingestion and generates trajectory plots, stats, and summary visualizations. Good for a quick overview.
+- **`BubbleFence_ZOD_Blog.ipynb`** -- concise end-to-end demo containing steps from the blog post, using `run_batch` with YAML configs. Runs two rounds of incremental ingestion and generates trajectory plots, stats, and summary visualizations. Good for a quick overview.
