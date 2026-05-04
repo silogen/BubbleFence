@@ -1,0 +1,164 @@
+# BubbleFence Configuration
+# Semantic Fencing using Foundation Model Embeddings and Hypersphere Bubbles
+
+# Class-aware mode: dedup preserves cross-class near-twins, anchor placement
+# ensures per-class eval representation via priority scheduling (rare-first).
+class_aware: false
+
+# Foundation Model Configuration
+foundation_models:
+  # Primary model (required)
+  primary_model: "openai/clip-vit-base-patch32"
+
+  # Multi-encoder setup (optional)
+  multi_encoder_enabled: false
+  additional_models: []
+    # - "facebook/dino-vitb16"
+    # - "google/siglip-base-patch16-224"
+
+  # Consensus mechanism for multi-encoder (only used if multi_encoder_enabled: true)
+  consensus_method: "intersection"  # Options: "intersection", "union", "majority"
+  consensus_threshold: 0.8  # Agreement threshold for consensus
+
+# Image Preprocessing Configuration
+# Controls the image processor used before embedding.
+# "auto" uses GPU-accelerated CLIPImageProcessorFast on ROCm/CUDA, CPU processor otherwise.
+preprocessing:
+  use_fast: "auto"        # "auto", "always", "never"
+  # All fields below default to the model's own values when omitted.
+  # Uncomment to override:
+  do_resize: true
+  resize_size: 224          # int for shortest-edge, or dict for {height, width}
+  do_center_crop: true
+  crop_size: 224            # square crop side length
+  do_rescale: true
+  do_normalize: true
+  # image_mean: [0.48145466, 0.4578275, 0.40821073]
+  # image_std: [0.26862954, 0.26130258, 0.27577711]
+  do_convert_rgb: true
+
+# Embedding Configuration
+embedding:
+  device: "auto"  # "cuda", "cpu", or "auto"
+  batch_size: 32
+  normalize_embeddings: true
+  io_workers: "auto"  # "auto", or integer. Auto: CPU=2 threads, GPU=min(16, 70% cores)
+
+# Deduplication Configuration
+deduplication:
+  enabled: true
+  similarity_threshold: 0.9999
+  method: "cosine"  # "cosine", "euclidean"
+
+# Density Transformation Configuration
+# Rescales embedding magnitudes by LID before anchor placement.
+# Disable if snap_strategy is "lid_weighted" to avoid redundancy.
+# Note: enabling affects visualizations since stored embeddings are not re-normalized.
+density_transformation:
+  enabled: false
+  method: "LID"  # "LID" (Local Intrinsic Dimensionality), "PCA", "none"
+  stretch_high_density_regions: true
+  density_threshold: 1.5  # Multiplier above average density to consider "high-density"
+
+# Anchor Placement Configuration
+anchor_placement:
+  method: "QMC"  # "QMC" (Quasi-Monte Carlo), "random", "kmeans"
+  qmc_sequence: "sobol"  # "sobol", "halton" (only used if method is "QMC")
+  min_anchor_distance: 0.1  # Minimum distance between anchors in embedding space
+  snap_strategy: "lid_weighted"  # "nearest" (plain argmin) or "lid_weighted" (1/LID bias toward dense regions)
+  lid_snap_k: 5  # k-nearest neighbors for LID-weighted snapping
+
+# Hypersphere Configuration
+hypersphere:
+  radius_computation: "adaptive"  # "adaptive", "fixed"
+
+  # Adaptive radius settings (used when radius_computation: "adaptive")
+  adaptive_method: "LID"  # "LID", "local_density", "knn_distance"
+
+  # Base radius configuration
+  base_radius_mode: "auto"  # "auto", "fixed"
+  base_radius_fixed: 0.05  # Used only when base_radius_mode: "fixed"
+
+  # Auto base radius settings (used when base_radius_mode: "auto")
+  base_radius_percentile: 50  # Use this percentile of pairwise distances as base radius
+  base_radius_scale: 1.0      # Multiplier applied to the computed percentile distance
+
+  radius_scale_factor: 1.0  # Multiplier for the adaptive LID/density scaling
+  min_radius: 0.01
+  max_radius: 0.5
+
+  # Fixed radius (not currently used by the pipeline; kept for future direct-radius mode)
+  fixed_radius: 0.1
+
+  # Buffer zones (optional)
+  buffer_zones:
+    enabled: false
+    buffer_radius: 0.02  # Additional radius around hypersphere boundary
+
+# Nested Shell Configuration
+nested_shells:
+  enabled: true
+  validation_ratio: 0.5  # Fraction of evaluation data for validation (rest goes to test)
+  # Shell layout: "random" flips per anchor (50/50), or fix to "inner_val" / "inner_test".
+  shell_configuration: "random"  # "inner_val", "inner_test", or "random"
+
+# Dataset Split Configuration
+dataset_splits:
+  train_ratio: 0.8
+  eval_ratio: 0.2  # Will be split between val/test based on validation_ratio above
+
+  # Ratio monitoring and adjustment
+  ratio_monitoring:
+    enabled: true
+    tolerance: 0.05  # Acceptable deviation from target ratios
+    rebalancing_strategy: "add_anchors"  # "add_anchors", "adjust_radii"
+
+# Streaming Configuration
+# When enabled, anchors and embeddings persist across ingestion runs,
+# enabling cross-batch deduplication and incremental anchor placement.
+# When disabled, each batch is processed independently with no state.
+streaming:
+  enabled: true
+  persistent_anchors: true
+  anchor_persistence_path: "anchors_state.pkl"
+
+# ANN Index Configuration (planned, not yet implemented)
+# Will replace brute-force pairwise distance computation for large-scale datasets.
+ann_index:
+  index_type: "HNSW"  # "HNSW", "IVF", "Flat"
+
+  # HNSW-specific parameters
+  hnsw:
+    M: 16  # Number of bi-directional links for each node
+    ef_construction: 200  # Size of dynamic candidate list
+    ef_search: 100  # Size of dynamic candidate list during search
+
+  # Memory management
+  memory_mapping: false
+  index_persistence_path: "ann_index.bin"
+
+# Distance Computation
+distance:
+  metric: "cosine"  # "cosine", "euclidean", "manhattan"
+  # Precision setting (currently fp32 is used unconditionally by torch)
+  precision: "float32"  # "float16", "float32", "float64"
+
+# Logging and Monitoring
+logging:
+  level: "INFO"  # "DEBUG", "INFO", "WARNING", "ERROR"
+  log_file: "bubblefence.log"
+
+# Output Configuration
+output:
+  output_path: "bubblefence_results"  # Default output directory (overridden by --output_dir CLI arg)
+
+# Experimental Features (use with caution)
+experimental:
+  dynamic_anchor_adjustment: false
+  adaptive_buffer_zones: false
+  hierarchical_anchors: false
+
+# Random Seed Configuration
+random_seed:
+  random_seed: 42
+  set_global_seeds: true

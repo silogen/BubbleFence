@@ -1,0 +1,58 @@
+# Batch configuration -- run BubbleFence on multiple folders
+# Usage: python run_bubblefence.py --batch config/batch.yaml
+#
+# Add or remove folders and visualizations as needed.
+# For large datasets (1000+ images), increase smoothing (50-200) for cleaner trajectories.
+
+# Folders to process with BubbleFence (in order)
+folders:
+  - path/to/folder_1
+  - path/to/folder_2
+  - path/to/folder_3
+
+# Output directory for all results
+output_dir: output/
+
+# BubbleFence YAML config (omit or set to null to use defaults)
+bf_config: config/bubblefence_config.yaml
+
+# Visualizations to generate after BubbleFence completes.
+# Available types: standalone, summary, detailed, stats
+# Add/remove entries as needed. All keys besides "type" and "save" are
+# passed as kwargs to the visualization function.
+visualizations:
+  # Print dataset statistics and save to stats.txt
+  - type: stats
+
+  # Trajectory plot with anchor thumbnails and radius circles
+  - type: standalone
+    save: tsne_traj.png
+    reduction_method: TSNE
+    show_heatmap: false
+    show_points: true
+    show_trajectories: true
+    show_radius_circles: true
+    show_anchor_thumbnails: true
+    num_anchor_thumbnails: 7
+    anchor_thumb_pixels: 120
+    point_alpha: 0.1
+    smoothing: 100
+
+  # 2-panel summary (splits + heatmap)
+  - type: summary
+    save: tsne_summary.png
+    reduction_method: TSNE
+    show_heatmap: true
+
+  # Optionally include an interactive 3D plot (saves as .html, open in browser)
+  # - type: 3d
+  #   save: bubblefence_3d.html
+  #   reduction_method: TSNE
+  #   show_trajectories: true
+  #   clean: true
+
+  # Optionally include a 4-panel detailed view (splits + heatmap + histogram + stats table)
+  # - type: detailed
+  #   save: tsne_detailed.png
+  #   reduction_method: TSNE
+  #   show_heatmap: true
